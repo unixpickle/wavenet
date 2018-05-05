@@ -1,0 +1,4 @@
+.benchmarks
+.cache
+__pycache__
+.swp
