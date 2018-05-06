@@ -25,17 +25,17 @@ class ConvCell(RNNCell):
 
     @property
     def state_size(self):
-        return (tf.TensorShape([self.conv.in_depth]),) * (self.conv.receptive_field - 1)
+        return (tf.TensorShape([self.conv.channels]),) * (self.conv.receptive_field - 1)
 
     @property
     def output_size(self):
-        return self.conv.in_depth
+        return self.conv.channels
 
     def zero_state(self, batch_size, dtype):
         """
         Generate an all-zero cache for the cell.
         """
-        zeros = tf.zeros([batch_size, self.conv.in_depth], dtype=dtype)
+        zeros = tf.zeros([batch_size, self.conv.channels], dtype=dtype)
         return (zeros,) * (self.conv.receptive_field - 1)
 
     def call(self, inputs, state):  # pylint: disable=W0221
