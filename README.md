@@ -10,6 +10,8 @@ You can install the package with `pip` like so:
 $ pip install wavenet
 ```
 
+The [example](example) is a complete program which trains a WaveNet on synthetic data from the macOS speech synthesizer. In this README, we only show the basics of applying WaveNets to sequences.
+
 Once you have the `wavenet` package, it's trivial to construct and use a WaveNet. Here's an example:
 
 ```python
