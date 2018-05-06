@@ -23,7 +23,7 @@ inputs = ...
 # Create a new network and all its variables.
 # In this case, the receptive field is 16.
 num_channels = inputs.get_shape()[-1].value
-network = Network([Conv(num_channels, log_dilation) for log_dilation in range(4)])
+network = Network([Conv(channels=num_channels, dilation=2**i) for i in range(4)])
 
 # Apply the model to the inputs, yielding outputs for
 # every timestep of the input.

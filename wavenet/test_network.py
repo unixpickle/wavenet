@@ -13,13 +13,13 @@ def test_network_rf():
     Test network receptive fields.
     """
     with tf.Graph().as_default():
-        net = Network([Conv(7, i) for i in range(4)])
+        net = Network([Conv(7, 2 ** i) for i in range(4)])
         assert net.receptive_field == 16
 
-        net = Network([Conv(7, 2), Conv(7, 0), Conv(7, 1)])
+        net = Network([Conv(7, 4), Conv(7, 1), Conv(7, 2)])
         assert net.receptive_field == 8
 
-        net = Network([Conv(7, 2), Conv(7, 0), Conv(7, 1), Conv(7, 0)])
+        net = Network([Conv(7, 4), Conv(7, 1), Conv(7, 2), Conv(7, 1)])
         assert net.receptive_field == 9
 
 
@@ -30,7 +30,7 @@ def test_network_apply():
     This is mostly intended to catch runtime errors.
     """
     with tf.Graph().as_default():
-        net = Network([Conv(5, i, dtype=tf.float64) for i in range(3)])
+        net = Network([Conv(5, 2 ** i, dtype=tf.float64) for i in range(3)])
         assert net.receptive_field == 8
         # A sequence that repeats at an interval that is
         # greater than the receptive field.

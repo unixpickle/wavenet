@@ -54,42 +54,41 @@ class Conv(Model):
     A dilated convolution layer.
     """
 
-    def __init__(self, in_depth, dilation, hidden_size=None, dtype=tf.float32):
+    def __init__(self, channels, dilation, hidden_size=None, dtype=tf.float32):
         """
         Create a new Layer.
 
         Args:
-          in_depth: the number of input channels.
-          dilation: the base 2 logarithm of the dilation.
-            0 means undilated, 1 means dilated by a factor
-            of 2, etc.
+          channels: the number of input channels.
+          dilation: the number of previous timesteps for
+            this convolution to span. 1 means undilated.
           hidden_size: if specified, this is the number of
             channels in the dilated convolution output,
             before the 1x1 projection brings the number of
-            channels back to in_depth. If None, then
-            in_depth is used.
+            channels back to `channels`. If None, then
+            `channels` is used.
           dtype: the DType for the convolutional kernels.
         """
-        self.in_depth = in_depth
+        self.channels = channels
         self.dilation = dilation
-        self.hidden_size = hidden_size or in_depth
+        self.hidden_size = hidden_size or channels
         with tf.variable_scope(None, default_name='layer'):
             self.filter_kernel = tf.get_variable('filter_kernel',
                                                  dtype=dtype,
-                                                 shape=(2 * self.in_depth, self.hidden_size))
+                                                 shape=(2 * self.channels, self.hidden_size))
             self.gate_kernel = tf.get_variable('gate_kernel',
                                                dtype=dtype,
-                                               shape=(2 * self.in_depth, self.hidden_size))
+                                               shape=(2 * self.channels, self.hidden_size))
             self.projection = tf.get_variable('projection',
                                               dtype=dtype,
-                                              shape=(self.hidden_size, self.in_depth))
+                                              shape=(self.hidden_size, self.channels))
 
     @property
     def receptive_field(self):
-        return 2 ** self.dilation + 1
+        return self.dilation + 1
 
     def apply(self, inputs):
-        assert inputs.get_shape()[-1].value == self.in_depth, 'incorrect number of input channels'
+        assert inputs.get_shape()[-1].value == self.channels, 'incorrect number of input channels'
         assert len(inputs.get_shape()) == 3, 'invalid input shape'
 
         padded_input = tf.pad(inputs, [[0, 0], [self.receptive_field - 1, 0], [0, 0]])
@@ -157,6 +156,7 @@ class Network(Model):
         return outputs
 
     def cell(self):
+        # pylint: disable=E1101
         return tf.contrib.rnn.MultiRNNCell([l.cell() for l in self.layers])
 
 
