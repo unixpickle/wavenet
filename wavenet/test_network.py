@@ -1,16 +1,22 @@
 """
-Tests for model specifications.
+Tests for networks.
 """
 
-from .spec import Layer, Network
+import tensorflow as tf
+
+from .network import Conv, Network
 
 
 def test_network_rf():
     """
     Test network receptive fields.
     """
-    net = Network([Layer(i) for i in range(4)])
-    assert net.receptive_field == 16
+    with tf.Graph().as_default():
+        net = Network([Conv(7, i) for i in range(4)])
+        assert net.receptive_field == 16
 
-    net = Network([Layer(2), Layer(0), Layer(1)])
-    assert net.receptive_field == 8
+        net = Network([Conv(7, 2), Conv(7, 0), Conv(7, 1)])
+        assert net.receptive_field == 8
+
+        net = Network([Conv(7, 2), Conv(7, 0), Conv(7, 1), Conv(7, 0)])
+        assert net.receptive_field == 9
