@@ -20,15 +20,14 @@ def main():
                                        sample_rate=args.sample_rate)
     train_batch = train_data.batch(args.batch_size).repeat().make_one_shot_iterator().get_next()
     val_batch = val_data.batch(args.batch_size).repeat().make_one_shot_iterator().get_next()
-    with tf.variable_scope('in_out_steps'):
-        train_loss = tf.reduce_mean(model.log_loss(train_batch))
-    with tf.variable_scope('in_out_steps', reuse=True):
-        val_loss = tf.reduce_mean(model.log_loss(val_batch))
-    with tf.variable_scope('in_out_steps', reuse=True):
-        with tf.device('/cpu:0'):
-            samples = model.sample(1, int(args.max_secs * args.sample_rate))
+
+    train_loss = tf.reduce_mean(model.log_loss(train_batch))
+    val_loss = tf.reduce_mean(model.log_loss(val_batch))
+
+    samples = model.sample(1, int(args.max_secs * args.sample_rate))
     write_samples = save_audio(args.sample_path, samples, sample_rate=args.sample_rate)
     optimize = tf.train.AdamOptimizer(learning_rate=args.step_size).minimize(train_loss)
+
     global_step = tf.get_variable('global_step',
                                   initializer=tf.constant(0, dtype=tf.int32),
                                   trainable=False)

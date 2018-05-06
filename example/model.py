@@ -31,30 +31,37 @@ class Model:
         Returns:
           A Tensor of negative log probs, one per sample.
         """
-        discrete = discretize_samples(samples)
-        zero_embedding = tf.zeros([tf.shape(samples)[0], 1, self.feature_size])
-        embedded = tf.concat([zero_embedding, self._embed_samples(discrete[:, 1:])], axis=1)
-        wavenet_out = self.wavenet.apply(embedded)
-        logits = self._output_logits(wavenet_out)
-        return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=discrete, logits=logits)
+        with tf.variable_scope('in_out', reuse=tf.AUTO_REUSE):
+            discrete = discretize_samples(samples)
+            zero_embedding = tf.zeros([tf.shape(samples)[0], 1, self.feature_size])
+            embedded = tf.concat([zero_embedding, self._embed_samples(discrete[:, 1:])], axis=1)
+            wavenet_out = self.wavenet.apply(embedded)
+            logits = self._output_logits(wavenet_out)
+            return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=discrete, logits=logits)
 
-    def sample(self, batch_size, timesteps):
+    def sample(self, batch_size, timesteps, chunk_size=16):
         """
         Produce a batch of samples from the model.
         """
         cell = self.wavenet.cell()
 
         def loop_condition(timestep, _states, _last_output, _arr):
-            return timestep < timesteps
+            return timestep + chunk_size <= timesteps
 
-        def loop_body(timestep, states, last_output, arr):
-            embedded = tf.cond(timestep > 0,
-                               true_fn=lambda: self._embed_samples(last_output),
-                               false_fn=lambda: tf.zeros([batch_size, self.feature_size]))
-            wavenet_outs, new_states = cell(embedded, states)
-            logits = self._output_logits(wavenet_outs)
-            outputs = sample_logits(logits)
-            return timestep + 1, new_states, outputs, arr.write(timestep, outputs)
+        def step_once(timestep, states, last_output, arr):
+            with tf.variable_scope('in_out', reuse=tf.AUTO_REUSE):
+                embedded = tf.cond(timestep > 0,
+                                   true_fn=lambda: self._embed_samples(last_output),
+                                   false_fn=lambda: tf.zeros([batch_size, self.feature_size]))
+                wavenet_outs, new_states = cell(embedded, states)
+                logits = self._output_logits(wavenet_outs)
+                outputs = sample_logits(logits)
+                return timestep + 1, new_states, outputs, arr.write(timestep, outputs)
+
+        def loop_body(*args):
+            for _ in range(chunk_size):
+                args = step_once(*args)
+            return args
 
         res = tf.while_loop(loop_condition,
                             loop_body,
@@ -62,6 +69,9 @@ class Model:
                              cell.zero_state(batch_size, tf.float32),
                              tf.zeros([batch_size], tf.int32),
                              tf.TensorArray(tf.int32, size=timesteps)])
+
+        for _ in range(timesteps - (timesteps // chunk_size) * chunk_size):
+            res = step_once(*res)
 
         return undiscretize_samples(res[-1].concat())
 
