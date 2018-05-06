@@ -34,7 +34,7 @@ class Model:
         with tf.variable_scope('in_out', reuse=tf.AUTO_REUSE):
             discrete = discretize_samples(samples)
             zero_embedding = tf.zeros([tf.shape(samples)[0], 1, self.feature_size])
-            embedded = tf.concat([zero_embedding, self._embed_samples(discrete[:, 1:])], axis=1)
+            embedded = tf.concat([zero_embedding, self._embed_samples(discrete[:, :-1])], axis=1)
             wavenet_out = self.wavenet.apply(embedded)
             logits = self._output_logits(wavenet_out)
             return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=discrete, logits=logits)
