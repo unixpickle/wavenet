@@ -165,7 +165,7 @@ def _sequence_matmul(seq, matrix):
     Apply a matrix to the inner dimension of a Tensor of
     shape [batch x timesteps x channels].
     """
-    flat = tf.reshape(seq, [-1, seq.get_shape()[-1]])
+    flat = tf.reshape(seq, [-1, seq.get_shape()[-1].value])
     flat_res = tf.matmul(flat, matrix)
-    shape = [seq.get_shape()[i] or tf.shape(seq)[i] for i in [0, 1]] + [matrix.get_shape()[-1]]
-    return tf.reshape(flat_res, shape)
+    outer_shape = [seq.get_shape()[i].value or tf.shape(seq)[i] for i in [0, 1]]
+    return tf.reshape(flat_res, outer_shape + [matrix.get_shape()[-1].value])

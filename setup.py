@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(
     name='wavenet',
-    version='0.1.1',
+    version='0.1.2',
     description='An implementation of WaveNet for TensorFlow.',
     url='https://github.com/unixpickle/wavenet',
     author='Alex Nichol',
