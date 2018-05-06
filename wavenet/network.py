@@ -6,6 +6,8 @@ from abc import ABC, abstractmethod, abstractproperty
 
 import tensorflow as tf
 
+from .cell import ConvCell
+
 
 class Model(ABC):
     """
@@ -36,6 +38,13 @@ class Model(ABC):
 
         Returns:
           A new [batch x timesteps x channels] Tensor.
+        """
+        pass
+
+    @abstractmethod
+    def cell(self):
+        """
+        Create an RNNCell for this model.
         """
         pass
 
@@ -92,6 +101,28 @@ class Conv(Model):
         projected = _sequence_matmul(filters * gates, self.projection)
         return projected + inputs
 
+    def cell(self):
+        return ConvCell(self)
+
+    def apply_once(self, first_half, second_half):
+        """
+        Apply the dilated convolution to a single patch.
+
+        Gets the
+
+        Args:
+          first_half: the first [batch x depth] Tensor.
+          second_half: the second [batch x depth] Tensor.
+
+        Returns:
+          A new [batch x depth] Tensor.
+        """
+        joined = tf.concat([first_half, second_half], axis=-1)
+        filters = tf.tanh(tf.matmul(joined, self.filter_kernel))
+        gates = tf.sigmoid(tf.matmul(joined, self.gate_kernel))
+        projected = tf.matmul(filters * gates, self.projection)
+        return projected + second_half
+
 
 class Network(Model):
     """
@@ -124,6 +155,9 @@ class Network(Model):
         for layer in self.layers:
             outputs = layer.apply(outputs)
         return outputs
+
+    def cell(self):
+        return tf.contrib.rnn.MultiRNNCell([l.cell() for l in self.layers])
 
 
 def _sequence_matmul(seq, matrix):
