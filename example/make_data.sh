@@ -7,7 +7,7 @@ DICT_FILE=/usr/share/dict/words
 DATA_DIR=data
 
 if ! type "$SAY_CMD" 2>/dev/null >/dev/null; then
-  echo "Say command not found: `$SAY_CMD`" >&2
+  echo "Say command not found: $SAY_CMD" >&2
   exit 1
 fi
 
