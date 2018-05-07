@@ -77,7 +77,7 @@ class Model:
         for _ in range(timesteps - (timesteps // chunk_size) * chunk_size):
             res = step_once(*res)
 
-        res = undiscretize_samples(res[-1].concat())
+        res = undiscretize_samples(res[-1].stack())
         # The time and batch dimensions are swapped.
         return tf.transpose(res)
 
