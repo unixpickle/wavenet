@@ -60,6 +60,7 @@ class Model:
 
         def loop_body(*args):
             for _ in range(chunk_size):
+                # pylint: disable=E1120
                 args = step_once(*args)
             return args
 
