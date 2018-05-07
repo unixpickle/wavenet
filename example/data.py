@@ -10,7 +10,9 @@ import tensorflow as tf
 
 def save_audio(out_path, tensor, sample_rate=22050):
     """
-    Write a 1-D audio Tensor to a WAV file.
+    Write an audio Tensor to a WAV file.
+
+    Automatically flattens the Tensor.
     """
     shaped = tf.reshape(tensor, [-1, 1])
     # pylint: disable=E1101

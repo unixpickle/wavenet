@@ -24,7 +24,7 @@ def main():
     train_loss = tf.reduce_mean(model.log_loss(train_batch))
     val_loss = tf.reduce_mean(model.log_loss(val_batch))
 
-    samples = model.sample(1, int(args.max_secs * args.sample_rate))
+    samples = model.sample(args.sample_batch, int(args.max_secs * args.sample_rate))
     write_samples = save_audio(args.sample_path, samples, sample_rate=args.sample_rate)
     optimize = tf.train.AdamOptimizer(learning_rate=args.step_size).minimize(train_loss)
 
@@ -60,6 +60,8 @@ def arg_parser():
     parser.add_argument('--save-interval', help='iters per save', type=int, default=1000)
     parser.add_argument('--sample-interval', help='how often to save a sample',
                         type=int, default=10000)
+    parser.add_argument('--sample-batch', help='how many samples to generate',
+                        type=int, default=16)
     parser.add_argument('--sample-path', help='where to dump the latest sample',
                         default='sample.wav')
     parser.add_argument('--step-size', help='training step size', type=float, default=1e-3)
