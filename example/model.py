@@ -42,6 +42,9 @@ class Model:
     def sample(self, batch_size, timesteps, chunk_size=16):
         """
         Produce a batch of samples from the model.
+
+        Returns:
+          A [batch_size x timesteps] Tensor of samples.
         """
         cell = self.wavenet.cell()
 
@@ -74,7 +77,9 @@ class Model:
         for _ in range(timesteps - (timesteps // chunk_size) * chunk_size):
             res = step_once(*res)
 
-        return undiscretize_samples(res[-1].concat())
+        res = undiscretize_samples(res[-1].concat())
+        # The time and batch dimensions are swapped.
+        return tf.transpose(res)
 
     def _embed_samples(self, discrete):
         """
