@@ -107,8 +107,6 @@ class Conv(Model):
         """
         Apply the dilated convolution to a single patch.
 
-        Gets the
-
         Args:
           first_half: the first [batch x depth] Tensor.
           second_half: the second [batch x depth] Tensor.
